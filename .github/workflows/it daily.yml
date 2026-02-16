@@ -1,0 +1,35 @@
+name: Daily Job Monitor
+
+on:
+  schedule:
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm install
+
+      - run: npx playwright install
+
+      - run: node src/check.js
+        env:
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+
+      - name: Commit updated seen.json
+        run: |
+          git config --global user.name "job-monitor"
+          git config --global user.email "actions@github.com"
+          git add seen.json
+          git commit -m "Update seen jobs" || echo "No changes"
+          git push
