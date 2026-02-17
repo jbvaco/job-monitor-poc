@@ -18,14 +18,6 @@ page.setDefaultTimeout(30000);
 
 let alerts = [];
 
-function looksLikeJobLink(link) {
-  return /job|jobs|posting|jobdetails|viewjob/i.test(link);
-}
-
-function normalizeText(s) {
-  return String(s || "").replace(/\s+/g, " ").trim();
-}
-
 function escapeHtml(s) {
   return String(s || "")
     .replace(/&/g, "&amp;")
@@ -33,6 +25,34 @@ function escapeHtml(s) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function normalizeText(s) {
+  return String(s || "").replace(/\s+/g, " ").trim();
+}
+
+function isJunkTitle(t) {
+  const x = normalizeText(t).toLowerCase();
+  if (!x) return true;
+  const junk = [
+    "skip to content",
+    "skip branding",
+    "create alert",
+    "sign in",
+    "home",
+    "reset",
+    "title",
+    "location",
+    "department",
+    "view all jobs",
+    "see open positions",
+    "see open open positions positions"
+  ];
+  if (junk.includes(x)) return true;
+  if (x.length < 4) return true;
+  // Pure navigation-ish
+  if (/^(about|careers|locations|faq|privacy|terms|contact)$/.test(x)) return true;
+  return false;
 }
 
 function dedupeByUrl(items) {
@@ -47,35 +67,119 @@ function dedupeByUrl(items) {
   return out;
 }
 
+function jobKey(clientName, url) {
+  return `${clientName}::${url}`;
+}
+
+async function collectJobsForClient(client) {
+  const url = client.url;
+  const lower = url.toLowerCase();
+
+  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 90000 });
+  await page.waitForTimeout(4000);
+
+  // GREENHOUSE
+  if (lower.includes("greenhouse.io")) {
+    const jobs = await page.$$eval('a[href*="/jobs/"]', as =>
+      as
+        .map(a => ({
+          title: (a.textContent || "").trim(),
+          url: a.href
+        }))
+        .filter(x => /\/jobs\/\d+/.test(x.url))
+    );
+
+    return dedupeByUrl(
+      jobs
+        .map(j => ({ title: normalizeText(j.title), url: j.url }))
+        .filter(j => !isJunkTitle(j.title))
+    );
+  }
+
+  // WORKDAY (OneOncology links to wd1.myworkdayjobs.com)
+  if (lower.includes("myworkdayjobs.com") || (await page.url()).toLowerCase().includes("myworkdayjobs.com")) {
+    // Workday job detail URLs usually contain /job/
+    const jobs = await page.$$eval('a[href*="/job/"]', as =>
+      as.map(a => ({ title: (a.textContent || "").trim(), url: a.href }))
+    );
+
+    return dedupeByUrl(
+      jobs
+        .map(j => ({ title: normalizeText(j.title), url: j.url }))
+        .filter(j => j.url.toLowerCase().includes("/job/"))
+        .filter(j => !isJunkTitle(j.title))
+    );
+  }
+
+  // DAYFORCE
+  if (lower.includes("dayforcehcm.com")) {
+    // Dayforce posting links commonly include "/Posting/" or "/JobPosting/"
+    const jobs = await page.$$eval('a[href]', as =>
+      as
+        .map(a => ({
+          title: (a.textContent || "").trim(),
+          url: a.href
+        }))
+        .filter(x => /\/(Posting|JobPosting)\//i.test(x.url))
+    );
+
+    return dedupeByUrl(
+      jobs
+        .map(j => ({ title: normalizeText(j.title), url: j.url }))
+        .filter(j => !isJunkTitle(j.title))
+    );
+  }
+
+  // iCIMS
+  if (lower.includes("icims.com")) {
+    const jobs = await page.$$eval('a[href*="/jobs/"]', as =>
+      as
+        .map(a => ({ title: (a.textContent || "").trim(), url: a.href }))
+        .filter(x => /\/jobs\/\d+/.test(x.url))
+    );
+
+    return dedupeByUrl(
+      jobs
+        .map(j => ({ title: normalizeText(j.title), url: j.url }))
+        .filter(j => !isJunkTitle(j.title))
+    );
+  }
+
+  // DELEK (Oracle-style). Often job results are links with /job/ in URL
+  if (lower.includes("jobs.delekus.com")) {
+    const jobs = await page.$$eval('a[href*="/job/"]', as =>
+      as.map(a => ({ title: (a.textContent || "").trim(), url: a.href }))
+    );
+
+    return dedupeByUrl(
+      jobs
+        .map(j => ({ title: normalizeText(j.title), url: j.url }))
+        .filter(j => j.url.toLowerCase().includes("/job/"))
+        .filter(j => !isJunkTitle(j.title))
+    );
+  }
+
+  // FALLBACK: generic, but filtered hard
+  const jobs = await page.$$eval("a[href]", as =>
+    as.map(a => ({ title: (a.textContent || "").trim(), url: a.href }))
+  );
+
+  return dedupeByUrl(
+    jobs
+      .map(j => ({ title: normalizeText(j.title), url: j.url }))
+      .filter(j => !isJunkTitle(j.title))
+      .filter(j => /job|jobs|posting|jobdetails|viewjob/i.test(j.url))
+  );
+}
+
 for (const client of clients) {
   try {
     console.log("Checking:", client.name);
 
-    await page.goto(client.url, { waitUntil: "domcontentloaded", timeout: 90000 });
-    await page.waitForTimeout(5000);
-
-    // Extract anchor title + url
-    const items = await page.$$eval("a", anchors =>
-      anchors
-        .map(a => ({
-          title: (a.innerText || "").trim(),
-          url: a.href
-        }))
-        .filter(x => x && x.url)
-    );
-
-    const jobItems = dedupeByUrl(
-      items
-        .map(x => ({
-          title: normalizeText(x.title),
-          url: x.url
-        }))
-        .filter(x => looksLikeJobLink(x.url))
-    );
+    const jobItems = await collectJobsForClient(client);
 
     if (!seen[client.name]) seen[client.name] = [];
 
-    // Identify new jobs by URL only
     const newJobs = jobItems.filter(x => !seen[client.name].includes(x.url));
 
     if (newJobs.length > 0) {
@@ -103,7 +207,6 @@ if (alerts.length > 0) {
     }
   });
 
-  // Build HTML email with clickable job titles
   let html = `<div style="font-family: Arial, sans-serif; font-size: 14px;">`;
   html += `<p><b>New job postings detected</b></p>`;
 
