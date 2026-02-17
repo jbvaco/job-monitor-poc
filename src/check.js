@@ -69,6 +69,65 @@ function dedupeByUrl(items) {
   return out;
 }
 
+/**
+ * Division classification (best guess).
+ * Rule: ALWAYS return one of:
+ * - Technology
+ * - Finance
+ * - General Staffing
+ * - Uncategorized (fallback if truly no signal)
+ *
+ * Nothing is dropped even if Uncategorized.
+ */
+function classifyDivision(title, url) {
+  const t = (normalizeText(title) + " " + String(url || "")).toLowerCase();
+
+  // Simple scoring: count keyword hits per division.
+  const tech = [
+    "software", "engineer", "developer", "devops", "sre", "site reliability",
+    "data", "analytics", "machine learning", "ml", "ai", "cloud", "aws", "azure", "gcp",
+    "security", "cyber", "infosec", "network", "systems", "infrastructure",
+    "it ", " it-", "help desk", "helpdesk", "service desk", "servicedesk",
+    "qa", "test ", "testing", "automation", "product manager", "product management",
+    "solutions engineer", "integration", "implementation", "salesforce", "sap", "oracle",
+    "sql", "python", "java", "javascript", "react", "node", "kubernetes", "docker",
+    "architect", "platform", "mobile", "ios", "android"
+  ];
+
+  const finance = [
+    "accounting", "accountant", "finance", "financial", "fp&a", "fpa",
+    "controller", "controllership", "cpa", "audit", "auditor",
+    "tax", "treasury", "payroll", "ap ", "a/p", "accounts payable",
+    "ar ", "a/r", "accounts receivable", "billing", "credit", "collections",
+    "bookkeeper", "bookkeeping", "cost accountant", "revenue", "budget", "forecast",
+    "procurement", "purchasing", "p2p", "r2r"
+  ];
+
+  const general = [
+    "operations", "operator", "warehouse", "manufacturing", "plant",
+    "production", "logistics", "driver", "terminal", "maintenance", "technician",
+    "field", "safety", "health & safety", "hse", "hr ", "human resources",
+    "recruiter", "recruiting", "coordinator", "assistant", "admin",
+    "customer service", "csr", "sales", "account manager", "marketing",
+    "manager", "supervisor", "specialist", "analyst"
+  ];
+
+  const score = (keywords) => keywords.reduce((acc, k) => acc + (t.includes(k) ? 1 : 0), 0);
+
+  const sTech = score(tech);
+  const sFin = score(finance);
+  const sGen = score(general);
+
+  // Strong signals: if tech or finance wins, pick it.
+  // If tie or very low signal, we still include it.
+  if (sTech > sFin && sTech > sGen) return "Technology";
+  if (sFin > sTech && sFin > sGen) return "Finance";
+  if (sGen > 0) return "General Staffing";
+
+  // If we truly have no signal, keep it visible but separated.
+  return "Uncategorized";
+}
+
 async function collectJobsForClient(client) {
   const startUrl = client.url;
   const lower = (startUrl || "").toLowerCase();
@@ -91,10 +150,7 @@ async function collectJobsForClient(client) {
     );
   }
 
-  // WORKDAY
-  // Handles:
-  // - Direct myworkdayjobs.com tenant pages
-  // - Marketing careers pages that link out to multiple tenants (OneOncology)
+  // WORKDAY (handles OneOncology-style hub pages)
   if (
     lower.includes("myworkdayjobs.com") ||
     (await page.url()).toLowerCase().includes("myworkdayjobs.com") ||
@@ -115,7 +171,6 @@ async function collectJobsForClient(client) {
     }
 
     const allJobs = [];
-
     for (const root of tenantRoots) {
       try {
         await page.goto(root, { waitUntil: "domcontentloaded", timeout: 90000 });
@@ -139,7 +194,7 @@ async function collectJobsForClient(client) {
     return dedupeByUrl(allJobs);
   }
 
-  // DAYFORCE (Arrowhead)
+  // DAYFORCE
   if (lower.includes("dayforcehcm.com")) {
     const items = await page.$$eval('a[href]', as =>
       as.map(a => ({ title: (a.innerText || "").trim(), url: a.href }))
@@ -158,9 +213,8 @@ async function collectJobsForClient(client) {
     return dedupeByUrl(filtered);
   }
 
-  // iCIMS (Acadia)
+  // iCIMS
   if (lower.includes("icims.com")) {
-    // Try clicking Search once if present
     try {
       const searchBtn = page.getByRole("button", { name: /search/i });
       if ((await searchBtn.count()) > 0) {
@@ -217,9 +271,16 @@ for (const client of clients) {
 
     const jobItems = await collectJobsForClient(client);
 
+    // Add division for every job item (best guess)
+    const enriched = jobItems.map(j => ({
+      title: j.title,
+      url: j.url,
+      division: classifyDivision(j.title, j.url)
+    }));
+
     if (!seen[client.name]) seen[client.name] = [];
 
-    const newJobs = jobItems.filter(x => !seen[client.name].includes(x.url));
+    const newJobs = enriched.filter(x => !seen[client.name].includes(x.url));
 
     if (newJobs.length > 0) {
       alerts.push({
@@ -249,21 +310,39 @@ if (alerts.length > 0) {
   let html = `<div style="font-family: Arial, sans-serif; font-size: 14px;">`;
   html += `<p><b>New job postings detected</b></p>`;
 
+  const divisionOrder = ["Technology", "Finance", "General Staffing", "Uncategorized"];
+
   for (const alert of alerts) {
     html += `<p style="margin: 16px 0 6px 0;"><b>${escapeHtml(alert.name)}</b><br/>`;
     html += `<span>Careers: <a href="${escapeHtml(alert.url)}">${escapeHtml(alert.url)}</a></span></p>`;
-    html += `<ul style="margin-top: 6px;">`;
 
-    alert.jobs.slice(0, 25).forEach(job => {
-      const title = job.title ? job.title : job.url;
-      html += `<li><a href="${escapeHtml(job.url)}">${escapeHtml(title)}</a></li>`;
-    });
-
-    if (alert.jobs.length > 25) {
-      html += `<li>(and ${alert.jobs.length - 25} more)</li>`;
+    // Group within client by division, but NEVER drop anything
+    const byDiv = {};
+    for (const d of divisionOrder) byDiv[d] = [];
+    for (const job of alert.jobs) {
+      const d = job.division || "Uncategorized";
+      if (!byDiv[d]) byDiv[d] = [];
+      byDiv[d].push(job);
     }
 
-    html += `</ul>`;
+    for (const d of divisionOrder) {
+      const list = byDiv[d] || [];
+      if (list.length === 0) continue;
+
+      html += `<div style="margin: 8px 0 2px 0;"><b>${escapeHtml(d)}</b></div>`;
+      html += `<ul style="margin-top: 6px;">`;
+
+      list.slice(0, 25).forEach(job => {
+        const title = job.title ? job.title : job.url;
+        html += `<li><a href="${escapeHtml(job.url)}">${escapeHtml(title)}</a></li>`;
+      });
+
+      if (list.length > 25) {
+        html += `<li>(and ${list.length - 25} more)</li>`;
+      }
+
+      html += `</ul>`;
+    }
   }
 
   html += `</div>`;
