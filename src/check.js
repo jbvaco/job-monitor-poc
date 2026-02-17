@@ -104,8 +104,8 @@ function classifyDivision(title, url) {
   ];
 
   const general = [
-    "operations", "operator", "warehouse", "manufacturing", "plant",
-    "production", "logistics", "driver", "terminal", "maintenance", "technician",
+    "operations", "operator", "manufacturing", "plant",
+    "production", "logistics", "terminal", "maintenance", "technician",
     "field", "safety", "health & safety", "hse", "hr ", "human resources",
     "recruiter", "recruiting", "coordinator", "assistant", "admin",
     "customer service", "csr", "sales", "account manager", "marketing",
