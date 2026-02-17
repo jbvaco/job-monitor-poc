@@ -34,7 +34,8 @@ function normalizeText(s) {
 function isJunkTitle(t) {
   const x = normalizeText(t).toLowerCase();
   if (!x) return true;
-  const junk = [
+
+  const junkExact = new Set([
     "skip to content",
     "skip branding",
     "create alert",
@@ -47,18 +48,19 @@ function isJunkTitle(t) {
     "view all jobs",
     "see open positions",
     "see open open positions positions"
-  ];
-  if (junk.includes(x)) return true;
+  ]);
+
+  if (junkExact.has(x)) return true;
   if (x.length < 4) return true;
-  // Pure navigation-ish
-  if (/^(about|careers|locations|faq|privacy|terms|contact)$/.test(x)) return true;
+  if (/^(about|careers|locations|faq|privacy|terms|contact)$/i.test(x)) return true;
+
   return false;
 }
 
 function dedupeByUrl(items) {
   const seenUrls = new Set();
   const out = [];
-  for (const it of items) {
+  for (const it of items || []) {
     if (!it?.url) continue;
     if (seenUrls.has(it.url)) continue;
     seenUrls.add(it.url);
@@ -67,25 +69,18 @@ function dedupeByUrl(items) {
   return out;
 }
 
-function jobKey(clientName, url) {
-  return `${clientName}::${url}`;
-}
-
 async function collectJobsForClient(client) {
-  const url = client.url;
-  const lower = url.toLowerCase();
+  const startUrl = client.url;
+  const lower = (startUrl || "").toLowerCase();
 
-  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 90000 });
+  await page.goto(startUrl, { waitUntil: "domcontentloaded", timeout: 90000 });
   await page.waitForTimeout(4000);
 
   // GREENHOUSE
   if (lower.includes("greenhouse.io")) {
     const jobs = await page.$$eval('a[href*="/jobs/"]', as =>
       as
-        .map(a => ({
-          title: (a.textContent || "").trim(),
-          url: a.href
-        }))
+        .map(a => ({ title: (a.innerText || "").trim(), url: a.href }))
         .filter(x => /\/jobs\/\d+/.test(x.url))
     );
 
@@ -96,45 +91,89 @@ async function collectJobsForClient(client) {
     );
   }
 
-  // WORKDAY (OneOncology links to wd1.myworkdayjobs.com)
-  if (lower.includes("myworkdayjobs.com") || (await page.url()).toLowerCase().includes("myworkdayjobs.com")) {
-    // Workday job detail URLs usually contain /job/
-    const jobs = await page.$$eval('a[href*="/job/"]', as =>
-      as.map(a => ({ title: (a.textContent || "").trim(), url: a.href }))
-    );
+  // WORKDAY
+  // Handles:
+  // - Direct myworkdayjobs.com tenant pages
+  // - Marketing careers pages that link out to multiple tenants (OneOncology)
+  if (
+    lower.includes("myworkdayjobs.com") ||
+    (await page.url()).toLowerCase().includes("myworkdayjobs.com") ||
+    lower.includes("oneoncology.com")
+  ) {
+    const tenantRoots = await page.$$eval('a[href*="myworkdayjobs.com/"]', as => {
+      const roots = as
+        .map(a => (a.href || "").trim())
+        .filter(Boolean)
+        .map(h => h.replace(/\/job\/.*$/i, ""))
+        .map(h => h.replace(/\/$/, ""));
+      return Array.from(new Set(roots));
+    });
 
-    return dedupeByUrl(
-      jobs
-        .map(j => ({ title: normalizeText(j.title), url: j.url }))
-        .filter(j => j.url.toLowerCase().includes("/job/"))
-        .filter(j => !isJunkTitle(j.title))
-    );
+    const current = (await page.url()).replace(/\/job\/.*$/i, "").replace(/\/$/, "");
+    if (current.toLowerCase().includes("myworkdayjobs.com/") && !tenantRoots.includes(current)) {
+      tenantRoots.push(current);
+    }
+
+    const allJobs = [];
+
+    for (const root of tenantRoots) {
+      try {
+        await page.goto(root, { waitUntil: "domcontentloaded", timeout: 90000 });
+        await page.waitForTimeout(4000);
+
+        const jobs = await page.$$eval('a[href*="/job/"]', as =>
+          as.map(a => ({ title: (a.innerText || "").trim(), url: a.href }))
+        );
+
+        const cleaned = jobs
+          .map(j => ({ title: normalizeText(j.title), url: j.url }))
+          .filter(j => j.url.toLowerCase().includes("/job/"))
+          .filter(j => !isJunkTitle(j.title));
+
+        allJobs.push(...cleaned);
+      } catch (e) {
+        console.log("Workday tenant failed:", root, e?.message || e);
+      }
+    }
+
+    return dedupeByUrl(allJobs);
   }
 
-  // DAYFORCE
+  // DAYFORCE (Arrowhead)
   if (lower.includes("dayforcehcm.com")) {
-    // Dayforce posting links commonly include "/Posting/" or "/JobPosting/"
-    const jobs = await page.$$eval('a[href]', as =>
-      as
-        .map(a => ({
-          title: (a.textContent || "").trim(),
-          url: a.href
-        }))
-        .filter(x => /\/(Posting|JobPosting)\//i.test(x.url))
+    const items = await page.$$eval('a[href]', as =>
+      as.map(a => ({ title: (a.innerText || "").trim(), url: a.href }))
     );
 
-    return dedupeByUrl(
-      jobs
-        .map(j => ({ title: normalizeText(j.title), url: j.url }))
-        .filter(j => !isJunkTitle(j.title))
-    );
+    const filtered = items
+      .map(j => ({ title: normalizeText(j.title), url: j.url }))
+      .filter(j => /dayforcehcm\.com/i.test(j.url))
+      .filter(j =>
+        /\/candidateportal\/jobs\/\d+/i.test(j.url) ||
+        /\/jobs\/\d+/i.test(j.url) ||
+        /\/(posting|jobposting)\//i.test(j.url)
+      )
+      .filter(j => !isJunkTitle(j.title));
+
+    return dedupeByUrl(filtered);
   }
 
-  // iCIMS
+  // iCIMS (Acadia)
   if (lower.includes("icims.com")) {
+    // Try clicking Search once if present
+    try {
+      const searchBtn = page.getByRole("button", { name: /search/i });
+      if ((await searchBtn.count()) > 0) {
+        await searchBtn.first().click({ timeout: 5000 });
+        await page.waitForTimeout(3000);
+      }
+    } catch (e) {
+      // ignore
+    }
+
     const jobs = await page.$$eval('a[href*="/jobs/"]', as =>
       as
-        .map(a => ({ title: (a.textContent || "").trim(), url: a.href }))
+        .map(a => ({ title: (a.innerText || "").trim(), url: a.href }))
         .filter(x => /\/jobs\/\d+/.test(x.url))
     );
 
@@ -145,10 +184,10 @@ async function collectJobsForClient(client) {
     );
   }
 
-  // DELEK (Oracle-style). Often job results are links with /job/ in URL
+  // DELEK
   if (lower.includes("jobs.delekus.com")) {
     const jobs = await page.$$eval('a[href*="/job/"]', as =>
-      as.map(a => ({ title: (a.textContent || "").trim(), url: a.href }))
+      as.map(a => ({ title: (a.innerText || "").trim(), url: a.href }))
     );
 
     return dedupeByUrl(
@@ -159,17 +198,17 @@ async function collectJobsForClient(client) {
     );
   }
 
-  // FALLBACK: generic, but filtered hard
-  const jobs = await page.$$eval("a[href]", as =>
-    as.map(a => ({ title: (a.textContent || "").trim(), url: a.href }))
+  // FALLBACK (strict)
+  const items = await page.$$eval("a[href]", as =>
+    as.map(a => ({ title: (a.innerText || "").trim(), url: a.href }))
   );
 
-  return dedupeByUrl(
-    jobs
-      .map(j => ({ title: normalizeText(j.title), url: j.url }))
-      .filter(j => !isJunkTitle(j.title))
-      .filter(j => /job|jobs|posting|jobdetails|viewjob/i.test(j.url))
-  );
+  const filtered = items
+    .map(j => ({ title: normalizeText(j.title), url: j.url }))
+    .filter(j => !isJunkTitle(j.title))
+    .filter(j => /job|jobs|posting|jobdetails|viewjob/i.test(j.url));
+
+  return dedupeByUrl(filtered);
 }
 
 for (const client of clients) {
