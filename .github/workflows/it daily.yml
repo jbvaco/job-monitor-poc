@@ -1,5 +1,8 @@
 name: Daily Job Monitor
 
+permissions:
+  contents: write
+
 on:
   schedule:
     - cron: '0 13 * * *'
