@@ -5,8 +5,10 @@ import { chromium } from "playwright";
 const clients = JSON.parse(fs.readFileSync("clients.json", "utf8"));
 const SEEN_FILE = "seen.json";
 
+const DRY_RUN = String(process.env.DRY_RUN || "").toLowerCase() === "true";
+
 let seen = {};
-if (fs.existsSync(SEEN_FILE)) {
+if (!DRY_RUN && fs.existsSync(SEEN_FILE)) {
   seen = JSON.parse(fs.readFileSync(SEEN_FILE, "utf8"));
 }
 
@@ -17,6 +19,7 @@ page.setDefaultNavigationTimeout(90000);
 page.setDefaultTimeout(30000);
 
 let alerts = [];
+let dryRunReport = [];
 
 function escapeHtml(s) {
   return String(s || "")
@@ -71,18 +74,11 @@ function dedupeByUrl(items) {
 
 /**
  * Division classification (best guess).
- * Rule: ALWAYS return one of:
- * - Technology
- * - Finance
- * - General Staffing
- * - Uncategorized (fallback if truly no signal)
- *
- * Nothing is dropped even if Uncategorized.
+ * Rule: NEVER drop jobs. Always return a division.
  */
 function classifyDivision(title, url) {
   const t = (normalizeText(title) + " " + String(url || "")).toLowerCase();
 
-  // Simple scoring: count keyword hits per division.
   const tech = [
     "software", "engineer", "developer", "devops", "sre", "site reliability",
     "data", "analytics", "machine learning", "ml", "ai", "cloud", "aws", "azure", "gcp",
@@ -104,8 +100,8 @@ function classifyDivision(title, url) {
   ];
 
   const general = [
-    "operations", "operator", "manufacturing", "plant",
-    "production", "logistics", "terminal", "maintenance", "technician",
+    "operations", "operator", "warehouse", "manufacturing", "plant",
+    "production", "logistics", "driver", "terminal", "maintenance", "technician",
     "field", "safety", "health & safety", "hse", "hr ", "human resources",
     "recruiter", "recruiting", "coordinator", "assistant", "admin",
     "customer service", "csr", "sales", "account manager", "marketing",
@@ -118,13 +114,10 @@ function classifyDivision(title, url) {
   const sFin = score(finance);
   const sGen = score(general);
 
-  // Strong signals: if tech or finance wins, pick it.
-  // If tie or very low signal, we still include it.
   if (sTech > sFin && sTech > sGen) return "Technology";
   if (sFin > sTech && sFin > sGen) return "Finance";
   if (sGen > 0) return "General Staffing";
 
-  // If we truly have no signal, keep it visible but separated.
   return "Uncategorized";
 }
 
@@ -196,7 +189,7 @@ async function collectJobsForClient(client) {
 
   // DAYFORCE
   if (lower.includes("dayforcehcm.com")) {
-    const items = await page.$$eval('a[href]', as =>
+    const items = await page.$$eval("a[href]", as =>
       as.map(a => ({ title: (a.innerText || "").trim(), url: a.href }))
     );
 
@@ -265,21 +258,43 @@ async function collectJobsForClient(client) {
   return dedupeByUrl(filtered);
 }
 
+function printDryRunSummary(name, url, jobs) {
+  console.log("\n========== DRY RUN ==========");
+  console.log(`Client: ${name}`);
+  console.log(`Careers: ${url}`);
+  console.log(`Detected jobs: ${jobs.length}`);
+
+  jobs.slice(0, 10).forEach((j, idx) => {
+    const title = j.title || "(no title)";
+    const div = j.division || "Uncategorized";
+    console.log(`${idx + 1}. [${div}] ${title} | ${j.url}`);
+  });
+
+  if (jobs.length > 10) {
+    console.log(`... and ${jobs.length - 10} more`);
+  }
+  console.log("========== END DRY RUN ==========\n");
+}
+
 for (const client of clients) {
   try {
     console.log("Checking:", client.name);
 
     const jobItems = await collectJobsForClient(client);
 
-    // Add division for every job item (best guess)
     const enriched = jobItems.map(j => ({
       title: j.title,
       url: j.url,
       division: classifyDivision(j.title, j.url)
     }));
 
-    if (!seen[client.name]) seen[client.name] = [];
+    if (DRY_RUN) {
+      printDryRunSummary(client.name, client.url, enriched);
+      dryRunReport.push({ client: client.name, url: client.url, count: enriched.length });
+      continue;
+    }
 
+    if (!seen[client.name]) seen[client.name] = [];
     const newJobs = enriched.filter(x => !seen[client.name].includes(x.url));
 
     if (newJobs.length > 0) {
@@ -292,13 +307,18 @@ for (const client of clients) {
     }
   } catch (err) {
     console.log(`Error checking ${client.name}:`, err?.message || err);
+    if (DRY_RUN) {
+      printDryRunSummary(client.name, client.url, []);
+    }
     continue;
   }
 }
 
 await browser.close();
 
-if (alerts.length > 0) {
+if (DRY_RUN) {
+  console.log("DRY RUN complete. No email sent. seen.json unchanged.");
+} else if (alerts.length > 0) {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -316,7 +336,6 @@ if (alerts.length > 0) {
     html += `<p style="margin: 16px 0 6px 0;"><b>${escapeHtml(alert.name)}</b><br/>`;
     html += `<span>Careers: <a href="${escapeHtml(alert.url)}">${escapeHtml(alert.url)}</a></span></p>`;
 
-    // Group within client by division, but NEVER drop anything
     const byDiv = {};
     for (const d of divisionOrder) byDiv[d] = [];
     for (const job of alert.jobs) {
@@ -355,8 +374,9 @@ if (alerts.length > 0) {
   });
 
   console.log("Email sent");
+
+  fs.writeFileSync(SEEN_FILE, JSON.stringify(seen, null, 2));
 } else {
   console.log("No new jobs found.");
+  fs.writeFileSync(SEEN_FILE, JSON.stringify(seen, null, 2));
 }
-
-fs.writeFileSync(SEEN_FILE, JSON.stringify(seen, null, 2));
