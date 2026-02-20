@@ -15,7 +15,8 @@
     "https://job-boards.greenhouse.io/getbuilt/jobs/4631970005",
     "https://job-boards.greenhouse.io/getbuilt/jobs/4660818005",
     "https://job-boards.greenhouse.io/getbuilt/jobs/4645515005",
-    "https://job-boards.greenhouse.io/getbuilt/jobs/4660093005"
+    "https://job-boards.greenhouse.io/getbuilt/jobs/4660093005",
+    "https://job-boards.greenhouse.io/getbuilt/jobs/4664279005"
   ],
   "Delek": [
     "https://jobs.delekus.com/job/Midland-VP%2C-Midstream-Operations-Midland%2C-TX-TX-79701/1312858500/",
@@ -42,7 +43,9 @@
     "https://jobs.delekus.com/job/Krotz-Springs-Process-Engineering-Intern-LA-70750/1357148000/",
     "https://jobs.delekus.com/job/Plain-Dealing-Crude-Transport-Driver-Haynesville%2C-LA-LA-71038/1336336200/",
     "https://jobs.delekus.com/job/Tyler-Reliability-Engineering-Intern-TX-75702/1357007100/",
-    "https://jobs.delekus.com/job/Tyler-Process-Controls-Engineering-Intern-TX-75702/1357181100/"
+    "https://jobs.delekus.com/job/Tyler-Process-Controls-Engineering-Intern-TX-75702/1357181100/",
+    "https://jobs.delekus.com/job/Tyler-Maintenance-Engineer-TX-75702/1337920800/",
+    "https://jobs.delekus.com/job/Libby-Plant-%28Libb%29-Pipeline-Operator-Hobbs%2C-NM-NM-88220/1358502900/"
   ],
   "Acadia Healthcare": [],
   "Arrowhead Engineered Products": [
@@ -70,7 +73,9 @@
     "https://jobs.dayforcehcm.com/en-US/aep/CANDIDATEPORTAL/jobs/4680",
     "https://jobs.dayforcehcm.com/en-US/aep/CANDIDATEPORTAL/jobs/4676",
     "https://jobs.dayforcehcm.com/en-US/aep/CANDIDATEPORTAL/jobs/4369",
-    "https://jobs.dayforcehcm.com/en-US/aep/CANDIDATEPORTAL/jobs/4672"
+    "https://jobs.dayforcehcm.com/en-US/aep/CANDIDATEPORTAL/jobs/4672",
+    "https://jobs.dayforcehcm.com/en-US/aep/CANDIDATEPORTAL/jobs/4575",
+    "https://jobs.dayforcehcm.com/en-US/aep/CANDIDATEPORTAL/jobs/4526"
   ],
   "Amsurg": [],
   "OneOncology": [
@@ -183,6 +188,26 @@
     "https://oneoncology.wd1.myworkdayjobs.com/en-US/Astera/job/Parsippany-NJ/Patient-Care-Associate_R-0000017215-1",
     "https://oneoncology.wd1.myworkdayjobs.com/en-US/Astera/job/Old-Bridge-NJ/Certified-Medical-Assistant-Patient-Care-Associate_R-0000018656",
     "https://oneoncology.wd1.myworkdayjobs.com/en-US/Astera/job/Robbinsville-NJ/Treatment-Scheduling-Coordinator_R-0000018652",
-    "https://oneoncology.wd1.myworkdayjobs.com/en-US/Astera/job/Denville-NJ/Medical-Scribe_R-0000018280"
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/Astera/job/Denville-NJ/Medical-Scribe_R-0000018280",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/OneOncology/job/United-States/Sr-Engagement-Manager--Real-World-Solutions_R-0000020035",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/OneOncology/job/United-States/RCM-Lab-Supervisor_R-0000019969",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/OneOncology/job/United-States/Sr-Authorization-Specialist_R-0000019966-1",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/OneOncology/job/United-States/Coding-Denials-Specialist_R-0000019979",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/OneOncology/job/UUG---Remote/Construction-Project-Manager_R-0000019980",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/TNONC/job/TNO---Gallatin--Gallatin-TN/Medical-Assistant_R-0000015761",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/TNONC/job/TNO---Springfield--Springfield-TN/Registered-Nurse--Float-_R-0000014580",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/TNONC/job/TNO---Elliston-Pl-Central-Pharm--Nashville-TN/Chemo-Prep-Tech_R-0000019962",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/NYCBS/job/New-York-NY/Medical-Assistant--Float_R-0000020075",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/NYCBS/job/New-York-NY/Medical-Assistant--Float_R-0000020073",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/NYCBS/job/Ridge-NY/Patient-Communications-Operator_R-0000020068",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/NYCBS/job/Ridge-NY/New-Patient-Coordinator_R-0000020066",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/NYCBS/job/New-York-NY/Licensed-Practical-Nurse--LPN-_R-0000020064",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/NYCBS/job/Bohemia-NY/CNA-Medical-Assistant--Chronic-Care-Management_R-0000020057",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/LACN/job/Fountain-Valley-CA/Pharm-Technician_R-0000020084",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/LACN/job/Montebello-CA/Medical-Assistant--Spanish-Required_R-0000017262",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/LACN/job/Los-Angeles-CA/Medical-Assistant_R-0000017260",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/LACN/job/Los-Angeles-CA/Medical-Assistant-Float_R-0000017259",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/Astera/job/Rutherford-NJ/Registered-Nurse-Non-exempt_R-0000020067",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/Astera/job/Rutherford-NJ/Nurse-Manager---North_R-0000009637"
   ]
 }
