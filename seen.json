@@ -24,7 +24,8 @@
     "https://job-boards.greenhouse.io/getbuilt/jobs/4682661005",
     "https://job-boards.greenhouse.io/getbuilt/jobs/4685250005",
     "https://job-boards.greenhouse.io/getbuilt/jobs/4686189005",
-    "https://job-boards.greenhouse.io/getbuilt/jobs/4688818005"
+    "https://job-boards.greenhouse.io/getbuilt/jobs/4688818005",
+    "https://job-boards.greenhouse.io/getbuilt/jobs/4692487005"
   ],
   "Delek": [
     "https://jobs.delekus.com/job/Midland-VP%2C-Midstream-Operations-Midland%2C-TX-TX-79701/1312858500/",
@@ -166,7 +167,11 @@
     "https://jobs.delekus.com/job/Brentwood-Staff-Financial-Controls-Analyst-TN-37024/1387325700/",
     "https://jobs.delekus.com/job/Tyler-Fuel-Transport-&-LPG-Driver-Tyler%2C-TX-TX-75202/1387332500/",
     "https://jobs.delekus.com/job/Tyler-I-&-E-Tech-TX-75702/1387360600/",
-    "https://jobs.delekus.com/job/El-Dorado-I-&-E-Tech-AR-71730/1387360600/"
+    "https://jobs.delekus.com/job/El-Dorado-I-&-E-Tech-AR-71730/1387360600/",
+    "https://jobs.delekus.com/job/Dallas-Sr-CIOT-Architect-TX-75217/1379702600/",
+    "https://jobs.delekus.com/job/Tyler-Sr-Manager%2C-Turnaround-TX-75702/1353781400/",
+    "https://jobs.delekus.com/job/Tyler-Manager%2C-Planning-and-Scheduling-TX-75702/1387110300/",
+    "https://jobs.delekus.com/job/Brentwood-Sr-HRIS-Analyst-TN-37027/1386131800/"
   ],
   "Acadia Healthcare": [],
   "Arrowhead Engineered Products": [
@@ -278,7 +283,10 @@
     "https://jobs.dayforcehcm.com/en-US/aep/CANDIDATEPORTAL/jobs/5249",
     "https://jobs.dayforcehcm.com/en-US/aep/CANDIDATEPORTAL/jobs/5275",
     "https://jobs.dayforcehcm.com/en-US/aep/CANDIDATEPORTAL/jobs/5283",
-    "https://jobs.dayforcehcm.com/en-US/aep/CANDIDATEPORTAL/jobs/5279"
+    "https://jobs.dayforcehcm.com/en-US/aep/CANDIDATEPORTAL/jobs/5279",
+    "https://jobs.dayforcehcm.com/en-US/aep/CANDIDATEPORTAL/jobs/5302",
+    "https://jobs.dayforcehcm.com/en-US/aep/CANDIDATEPORTAL/jobs/5297",
+    "https://jobs.dayforcehcm.com/en-US/aep/CANDIDATEPORTAL/jobs/5295"
   ],
   "Amsurg": [],
   "OneOncology": [
@@ -938,6 +946,29 @@
     "https://oneoncology.wd1.myworkdayjobs.com/en-US/TNONC/job/TNO--Morristown-Medical-Oncology--Morristown-TN/Lab-Phlebotomist_R-0000021914",
     "https://oneoncology.wd1.myworkdayjobs.com/en-US/TNONC/job/TNO---Franklin--Franklin-TN/Registration-Coordinator_R-0000021900",
     "https://oneoncology.wd1.myworkdayjobs.com/en-US/NYCBS/job/Port-Jefferson-Station-NY/Medical-Assistant_R-0000021057",
-    "https://oneoncology.wd1.myworkdayjobs.com/en-US/ECHO/job/Norwich-CT/Aprn_R-0000020815"
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/ECHO/job/Norwich-CT/Aprn_R-0000020815",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/OneOncology/job/United-States/Service-Desk-Associate_R-0000021996",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/OneOncology/job/United-States/Medical-Billing-Specialist_R-0000021747",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/OneOncology/job/Goldsboro-NC/Tech-Analyst-I_R-0000021697",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/OneOncology/job/United-States/Sr-IT-Project-Engineer_R-0000021937",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/OneOncology/job/East-Brunswick-NJ/Tech-Analyst-I_R-0000021898",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/OneOncology/job/Grand-Rapids-MI/Patient-AR-Specialist_R-0000021813",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/TNONC/job/TNO---Nashville-Research--Nashville-TN/Early-Phase-Research-Nurse_R-0000021988",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/TNONC/job/TNO---Midtown-Admin--Nashville-TN/Physician-Liaison_R-0000022029",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/TNONC/job/TNO---Lebanon--Lebanon-TN/Manager--Operations_R-0000022000",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/TNONC/job/TNO---GHCR-Admin--Nashville-TN/Clinical-Trial-Specialist_R-0000021752",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/TNONC/job/TNO---GHCR-Admin--Nashville-TN/Executive-Director--Research-Operations_R-0000021990",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/TNONC/job/TNO---Chatt---Downtown--Chattanooga-TN/Registered-Nurse_R-0000021965",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/TNONC/job/TNO---Memorial-Radiation-Oncology--Chattanooga-TN/Regional-Manager--Radiation-Operations_R-0000021952",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/NYCBS/job/Lake-Success-NY/APP---Nurse-Practitioner---Physician-Assistant_R-0000022036",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/NYCBS/job/Rockville-Centre-NY/Associate--Office_R-0000022021",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/NYCBS/job/Bohemia-NY/LPN-Clinical-Care-Team_R-0000022032",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/NYCBS/job/NYCBS---Oncology---Bayshore-375--East-Islip-NY/Associate--Office_R-0000022017",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/NYCBS/job/Babylon-NY/Registered-Nurse_R-0000022009",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/NYCBS/job/Port-Jefferson-Station-NY/Registered-Nurse-Part-Time-Weekends_R-0000022008",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/NYCBS/job/Port-Jefferson-Station-NY/Registered-Nurse_R-0000022007",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/NYCBS/job/Port-Jefferson-Station-NY/Registered-Nurse_R-0000022004",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/NYCBS/job/Port-Jefferson-Station-NY/Office-Associate_R-0000021999",
+    "https://oneoncology.wd1.myworkdayjobs.com/en-US/Astera/job/Monroe-Township-NJ/Clinical-Medical-Physicist_R-0000021992-1"
   ]
 }
